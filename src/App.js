@@ -188,7 +188,6 @@ function App() {
               </div>
               <div className="cta-row">
                 <a href="#contact" className="btn btn-primary">Apply for the Beta</a>
-                <a href="https://calendly.com/engageai/free-setup" target="_blank" rel="noreferrer" className="btn btn-outline">Or book a call</a>
               </div>
               <p className="fineprint">Only 5 seats. We’ll review applicants on a rolling basis this week.</p>
             </div>
