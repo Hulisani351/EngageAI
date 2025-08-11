@@ -37,21 +37,22 @@ module.exports = async function handler(req, res) {
 
     // Priority 1: Formspree endpoint (with optional custom key for AJAX protection)
     const formspree = process.env.FORMSPREE_ENDPOINT; // e.g. https://formspree.io/f/xxxxxx
-    const formspreeCustomKey = process.env.FORMSPREE_CUSTOM_KEY || '';
     if (formspree) {
-      const headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (formspreeCustomKey) {
-        headers['Formspree-Protection'] = formspreeCustomKey;
-      }
+      const formBody = new URLSearchParams();
+      Object.entries(payload).forEach(([k, v]) => formBody.append(k, String(v)));
       const r = await fetch(formspree, {
         method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        },
+        body: formBody.toString(),
       });
-      if (!r.ok) throw new Error('Formspree forward failed');
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        console.error('Formspree forward failed', r.status, text);
+        throw new Error('Formspree forward failed');
+      }
       return res.status(200).json({ message: 'Thanks! We will reach out shortly.' });
     }
 
