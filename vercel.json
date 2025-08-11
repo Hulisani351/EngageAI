@@ -3,6 +3,9 @@
   "builds": [
     { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
   ],
+  "env": {
+    "REACT_APP_FORMSPREE_RECAPTCHA_SITE_KEY": "lasnslfnafhiuahaiuhab"
+  },
   "routes": [
     { "handle": "filesystem" },
     { "src": "/.*", "dest": "/index.html" }
