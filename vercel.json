@@ -4,7 +4,8 @@
     { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
   ],
   "env": {
-    "REACT_APP_FORMSPREE_RECAPTCHA_SITE_KEY": "6LcXJKIrAAAAABYhF20VcT15gZvxCEkFEUZhDHUA"
+    "FORMSPREE_ENDPOINT": "https://formspree.io/f/xqalwjpj",
+    "FORMSPREE_CUSTOM_KEY": "lasnslfnafhiuahaiuhab"
   },
   "routes": [
     { "handle": "filesystem" },

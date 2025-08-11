@@ -1,4 +1,5 @@
 import './App.css';
+import { useState } from 'react';
 
 function App() {
   return (
@@ -223,11 +224,48 @@ function App() {
 export default App;
 
 function Form() {
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState({ ok: false, message: '' });
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (submitting) return;
+    setStatus({ ok: false, message: '' });
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form));
+    if (data._gotcha) return; // spam bot
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/lead', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          handle: data.handle,
+          source: 'landing-form',
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setStatus({ ok: true, message: json.message || 'Thanks! We will reach out shortly.' });
+        form.reset();
+      } else {
+        setStatus({ ok: false, message: json.error || 'Something went wrong. Please try again.' });
+      }
+    } catch (err) {
+      setStatus({ ok: false, message: 'Network error. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <form id="lead-form" className="lead-form" action="https://formspree.io/f/xqalwjpj" method="POST">
+    <form id="lead-form" className="lead-form" onSubmit={handleSubmit}>
       <input type="text" name="_gotcha" className="honeypot" tabIndex="-1" autoComplete="off" />
-      <input type="hidden" name="source" value="landing-form" />
-      <input type="hidden" name="_redirect" value="/?submitted=1#contact" />
       <div className="form-grid">
         <label>
           <span>Name</span>
@@ -242,12 +280,13 @@ function Form() {
           <input name="handle" type="text" placeholder="@yourhandle or +1 555 123 4567" required />
         </label>
       </div>
-      <div
-        className="g-recaptcha"
-        data-sitekey={process.env.REACT_APP_FORMSPREE_RECAPTCHA_SITE_KEY || 'REPLACE_WITH_FORMSPREE_SITE_KEY'}
-      />
-      <button type="submit" className="btn btn-primary btn-submit">Get my free setup</button>
+      <button type="submit" className="btn btn-primary btn-submit" disabled={submitting}>
+        {submitting ? 'Submitting…' : 'Get my free setup'}
+      </button>
       <p className="form-note">By submitting, you agree to be contacted about onboarding. No spam.</p>
+      {status.message && (
+        <p className={status.ok ? 'form-success' : 'form-error'}>{status.message}</p>
+      )}
     </form>
   );
 }

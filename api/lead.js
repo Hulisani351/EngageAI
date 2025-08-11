@@ -23,12 +23,20 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString(),
     };
 
-    // Priority 1: Formspree endpoint
+    // Priority 1: Formspree endpoint (with optional custom key for AJAX protection)
     const formspree = process.env.FORMSPREE_ENDPOINT; // e.g. https://formspree.io/f/xxxxxx
+    const formspreeCustomKey = process.env.FORMSPREE_CUSTOM_KEY || '';
     if (formspree) {
+      const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+      if (formspreeCustomKey) {
+        headers['Formspree-Protection'] = formspreeCustomKey;
+      }
       const r = await fetch(formspree, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
       if (!r.ok) throw new Error('Formspree forward failed');
