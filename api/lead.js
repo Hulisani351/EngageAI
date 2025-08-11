@@ -8,6 +8,9 @@ module.exports = async function handler(req, res) {
     return res.status(204).end();
   }
 
+  if (req.method === 'GET') {
+    return res.status(200).json({ status: 'ok', message: 'POST to this endpoint to submit a lead.' });
+  }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
