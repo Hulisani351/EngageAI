@@ -227,6 +227,7 @@ function Form() {
     <form id="lead-form" className="lead-form" action="https://formspree.io/f/xqalwjpj" method="POST">
       <input type="text" name="_gotcha" className="honeypot" tabIndex="-1" autoComplete="off" />
       <input type="hidden" name="source" value="landing-form" />
+      <input type="hidden" name="_redirect" value="/?submitted=1#contact" />
       <div className="form-grid">
         <label>
           <span>Name</span>
@@ -241,15 +242,11 @@ function Form() {
           <input name="handle" type="text" placeholder="@yourhandle or +1 555 123 4567" required />
         </label>
       </div>
-      <button
-        type="submit"
-        className="btn btn-primary btn-submit g-recaptcha"
+      <div
+        className="g-recaptcha"
         data-sitekey={process.env.REACT_APP_FORMSPREE_RECAPTCHA_SITE_KEY || 'REPLACE_WITH_FORMSPREE_SITE_KEY'}
-        data-callback="onSubmit"
-        data-action="submit"
-      >
-        Get my free setup
-      </button>
+      />
+      <button type="submit" className="btn btn-primary btn-submit">Get my free setup</button>
       <p className="form-note">By submitting, you agree to be contacted about onboarding. No spam.</p>
     </form>
   );
