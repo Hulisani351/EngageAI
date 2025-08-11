@@ -236,7 +236,8 @@ function Form() {
     if (data._gotcha) return; // spam bot
     setSubmitting(true);
     try {
-      const res = await fetch('/api/lead', {
+      const apiBase = (process.env.REACT_APP_API_BASE || '').replace(/\/$/, '');
+      const res = await fetch(`${apiBase}/api/lead`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
