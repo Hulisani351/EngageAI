@@ -9,6 +9,7 @@
     "FORMSPREE_CUSTOM_KEY": "lasnslfnafhiuahaiuhab"
   },
   "routes": [
+    { "src": "/api/lead", "dest": "/api/lead.js" },
     { "handle": "filesystem" },
     { "src": "/.*", "dest": "/index.html" }
   ],
