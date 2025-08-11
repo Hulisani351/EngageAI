@@ -1,4 +1,5 @@
 import './App.css';
+import { useState } from 'react';
 
 function App() {
   return (
@@ -127,7 +128,7 @@ function App() {
 
         <section className="pricing" id="pricing" aria-labelledby="pricing-title">
           <div className="container">
-            <h2 id="pricing-title">Free trial → then $300 setup + pay only on wins</h2>
+            <h2 id="pricing-title">Free trial → then $1500 setup + pay only on wins</h2>
             <div className="no-brainer">
               <div className="value">
                 <h3>What you get</h3>
@@ -141,7 +142,7 @@ function App() {
               <div className="offer">
                 <div className="price-box">
                   <div className="trial">Start with a free trial</div>
-                  <div className="setup">Then one‑time setup: <strong>$300</strong></div>
+                  <div className="setup">Then one‑time setup: <strong>$1500</strong></div>
                   <div className="perf">Performance fee: <strong>10% of revenue EngageAI helps close</strong></div>
                 </div>
                 <a href="#contact" className="btn btn-primary">Start your free trial</a>
@@ -223,11 +224,45 @@ function App() {
 export default App;
 
 function Form() {
+  const [persona, setPersona] = useState('Influencer');
+  const [goal, setGoal] = useState('More bookings');
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState({ ok: false, message: '' });
+  const [showThanks, setShowThanks] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (submitting) return;
+    setStatus({ ok: false, message: '' });
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    if (formData.get('_gotcha')) return; // honeypot
+    setSubmitting(true);
+    try {
+      const res = await fetch('https://formspree.io/f/xqalwjpj', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: formData,
+      });
+      if (res.ok) {
+        setShowThanks(true);
+        form.reset();
+        setPersona('Influencer');
+        setGoal('More bookings');
+      } else {
+        setStatus({ ok: false, message: 'Something went wrong. Please try again.' });
+      }
+    } catch (err) {
+      setStatus({ ok: false, message: 'Network error. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <form id="lead-form" className="lead-form" action="https://formspree.io/f/xqalwjpj" method="POST">
+    <form id="lead-form" className="lead-form" onSubmit={handleSubmit}>
       <input type="text" name="_gotcha" className="honeypot" tabIndex="-1" autoComplete="off" />
       <input type="hidden" name="source" value="landing-form" />
-      <input type="hidden" name="_redirect" value="/?submitted=1#contact" />
       <div className="form-grid">
         <label>
           <span>Name</span>
@@ -241,9 +276,62 @@ function Form() {
           <span>Instagram handle or WhatsApp number</span>
           <input name="handle" type="text" placeholder="@yourhandle or +1 555 123 4567" required />
         </label>
+        <label className="full">
+          <span>I’m a</span>
+          <select name="persona" value={persona} onChange={(e) => setPersona(e.target.value)}>
+            <option value="Influencer">Influencer</option>
+            <option value="Coach / Course creator">Coach / Course creator</option>
+            <option value="Agency">Agency</option>
+            <option value="E‑commerce">E‑commerce</option>
+            <option value="Startup">Startup</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        {persona === 'Other' && (
+          <label className="full">
+            <span>What do you do?</span>
+            <input name="persona_other" type="text" placeholder="Describe your role or business" required />
+          </label>
+        )}
+        <label className="full">
+          <span>Goal</span>
+          <select name="goal" value={goal} onChange={(e) => setGoal(e.target.value)}>
+            <option value="More bookings">More bookings</option>
+            <option value="Faster replies">Faster replies</option>
+            <option value="Grow email list">Grow email list</option>
+            <option value="Qualify leads better">Qualify leads better</option>
+            <option value="Increase conversions">Increase conversions</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        {goal === 'Other' && (
+          <label className="full">
+            <span>What’s your goal?</span>
+            <input name="goal_other" type="text" placeholder="Describe your goal" required />
+          </label>
+        )}
+        <label className="full">
+          <span>Anything else? (optional)</span>
+          <input name="note" type="text" placeholder="Share context, links, or timing" />
+        </label>
       </div>
-      <button type="submit" className="btn btn-primary btn-submit">Get my free setup</button>
+      <button type="submit" className="btn btn-primary btn-submit" disabled={submitting}>
+        {submitting ? 'Submitting…' : 'Get my free setup'}
+      </button>
       <p className="form-note">By submitting, you agree to be contacted about onboarding. No spam.</p>
+      {status.message && (
+        <p className={status.ok ? 'form-success' : 'form-error'}>{status.message}</p>
+      )}
+
+      {showThanks && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal">
+            <h3>Thanks! You’re on the list.</h3>
+            <p>We’ll reach out shortly to get your free setup started.</p>
+            <button className="btn btn-primary" type="button" onClick={() => setShowThanks(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
