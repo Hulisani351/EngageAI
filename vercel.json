@@ -1,12 +1,17 @@
 {
   "version": 2,
   "builds": [
-    { "src": "package.json", "use": "@vercel/static-build" },
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } },
     { "src": "api/lead.js", "use": "@vercel/node" }
   ],
   "env": {
     "FORMSPREE_ENDPOINT": "https://formspree.io/f/xqalwjpj",
     "FORMSPREE_CUSTOM_KEY": ""
-  }
+  },
+  "routes": [
+    { "src": "/api/lead", "dest": "/api/lead.js" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
 
