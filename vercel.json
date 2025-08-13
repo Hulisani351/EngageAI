@@ -7,11 +7,6 @@
   "env": {
     "FORMSPREE_ENDPOINT": "https://formspree.io/f/xqalwjpj",
     "FORMSPREE_CUSTOM_KEY": ""
-  },
-  "routes": [
-    { "src": "/api/lead", "dest": "/api/lead.js" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  }
 }
 
