@@ -6,7 +6,10 @@ function App() {
     <div className="page">
       <header className="site-header">
         <div className="container nav">
-          <div className="brand">EngageAI</div>
+          <div className="brand">
+            <img src="/EngageLogo.jpg" alt="EngageAI Logo" className="brand-logo" />
+            <span>EngageAI</span>
+          </div>
           <nav className="nav-links">
             <a href="#benefits">Benefits</a>
             <a href="#how">How it works</a>
@@ -206,7 +209,10 @@ function App() {
 
       <footer className="site-footer">
         <div className="container footer-grid">
-          <div className="brand">EngageAI</div>
+          <div className="brand">
+            <img src="/EngageLogo.jpg" alt="EngageAI Logo" className="brand-logo" />
+            <span>EngageAI</span>
+          </div>
           <nav className="footer-links">
             <a href="#home">Home</a>
             <a href="#benefits">Benefits</a>
