@@ -131,7 +131,7 @@ function App() {
 
         <section className="pricing" id="pricing" aria-labelledby="pricing-title">
           <div className="container">
-            <h2 id="pricing-title">Free trial → then $1500 setup + pay only on wins</h2>
+            <h2 id="pricing-title">Free trial → then $3000 setup + pay only on wins</h2>
             <div className="no-brainer">
               <div className="value">
                 <h3>What you get</h3>
@@ -145,7 +145,7 @@ function App() {
               <div className="offer">
                 <div className="price-box">
                   <div className="trial">Start with a free trial</div>
-                  <div className="setup">Then one‑time setup: <strong>$1500</strong></div>
+                  <div className="setup">Then one‑time setup: <strong>$3000</strong></div>
                   <div className="perf">Performance fee: <strong>10% of revenue EngageAI helps close</strong></div>
                 </div>
                 <a href="#contact" className="btn btn-primary">Start your free trial</a>
