@@ -193,13 +193,10 @@ const CURRENCY_SYMBOLS = {
 };
 
 export const useCurrency = () => {
-  const [userCurrency, setUserCurrency] = useState(() => {
-    // Check localStorage first
-    const saved = localStorage.getItem('userCurrency');
-    return saved || 'USD';
-  });
+  const [userCurrency, setUserCurrency] = useState('USD');
   const [userCountry, setUserCountry] = useState('US');
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const updateCurrency = (newCurrency) => {
     setUserCurrency(newCurrency);
@@ -211,191 +208,232 @@ export const useCurrency = () => {
       try {
         console.log('Detecting user location...');
         
-        // Try multiple geolocation APIs for better reliability
-        let locationData = null;
+        // Check cache first (24 hour cache)
+        const cachedData = localStorage.getItem('locationCache');
+        const cacheTimestamp = localStorage.getItem('locationCacheTimestamp');
+        const now = Date.now();
         
-        // Try ipapi.co first
+        if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp)) < 24 * 60 * 60 * 1000) {
+          const parsed = JSON.parse(cachedData);
+          console.log('Using cached location data:', parsed);
+          setUserCurrency(parsed.currency);
+          setUserCountry(parsed.country);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fast, reliable IP geolocation using a better API
         try {
-          const response = await fetch('https://ipapi.co/json/');
-          locationData = await response.json();
-          console.log('ipapi.co data:', locationData);
-        } catch (error) {
-          console.log('ipapi.co failed, trying alternative...');
-        }
-        
-        // If ipapi.co failed, try ipinfo.io
-        if (!locationData || !locationData.currency_code) {
-          try {
-            const response = await fetch('https://ipinfo.io/json');
-            locationData = await response.json();
-            console.log('ipinfo.io data:', locationData);
-            // ipinfo.io doesn't provide currency, so we'll use country code
-          } catch (error) {
-            console.log('ipinfo.io also failed...');
-          }
-        }
-        
-        // Determine currency from location data
-        let detectedCurrency = null;
-        let detectedCountry = null;
-        
-        if (locationData) {
-          if (locationData.currency_code && CURRENCY_RATES[locationData.currency_code]) {
-            detectedCurrency = locationData.currency_code;
-            detectedCountry = locationData.country_code;
-            console.log(`Setting currency to ${detectedCurrency} for ${detectedCountry}`);
-          } else if (locationData.country) {
-            // Use country code to determine currency
-            const countryToCurrency = {
-              'GB': 'GBP',
-              'ZA': 'ZAR',
-              'CA': 'CAD',
-              'AU': 'AUD',
-              'JP': 'JPY',
-              'IN': 'INR',
-              'BR': 'BRL',
-              'MX': 'MXN',
-              'SG': 'SGD',
-              'HK': 'HKD',
-              'KR': 'KRW',
-              'CN': 'CNY',
-              'CH': 'CHF',
-              'SE': 'SEK',
-              'NO': 'NOK',
-              'DK': 'DKK',
-              'PL': 'PLN',
-              'CZ': 'CZK',
-              'HU': 'HUF',
-              'RU': 'RUB',
-              'TR': 'TRY',
-              'IL': 'ILS',
-              'AE': 'AED',
-              'SA': 'SAR',
-              'QA': 'QAR',
-              'KW': 'KWD',
-              'BH': 'BHD',
-              'OM': 'OMR',
-              'JO': 'JOD',
-              'LB': 'LBP',
-              'EG': 'EGP',
-              'MA': 'MAD',
-              'TN': 'TND',
-              'DZ': 'DZD',
-              'NG': 'NGN',
-              'GH': 'GHS',
-              'KE': 'KES',
-              'UG': 'UGX',
-              'TZ': 'TZS',
-              'ZM': 'ZMW',
-              'BW': 'BWP',
-              'NA': 'NAM',
-              'SZ': 'SZL',
-              'LS': 'LSL',
-              'MU': 'MUR',
-              'SC': 'SCR',
-              'CD': 'CDF',
-              'CM': 'XAF',
-              'SN': 'XOF',
-              'PF': 'XPF',
-            };
+          console.log('Fetching location from reliable API...');
+          
+          // Use a more reliable and faster API
+          const response = await fetch('https://api.ipgeolocation.io/ipgeo?apiKey=free', {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Location data received:', data);
             
-            const countryCode = locationData.country;
-            if (countryToCurrency[countryCode]) {
-              detectedCurrency = countryToCurrency[countryCode];
-              detectedCountry = countryCode;
-              console.log(`Setting currency to ${detectedCurrency} for ${detectedCountry} from country code`);
+            if (data.currency && data.currency.code && CURRENCY_RATES[data.currency.code]) {
+              console.log(`Setting currency to ${data.currency.code} for ${data.country_code2}`);
+              setUserCurrency(data.currency.code);
+              setUserCountry(data.country_code2);
+              
+              // Cache the result
+              const cacheData = {
+                currency: data.currency.code,
+                country: data.country_code2
+              };
+              localStorage.setItem('locationCache', JSON.stringify(cacheData));
+              localStorage.setItem('locationCacheTimestamp', now.toString());
+              
+              setIsLoading(false);
+              return;
             }
           }
+        } catch (error) {
+          console.log('Primary API failed, trying alternative...');
         }
-        
-        // If still no currency detected, try browser locale
-        if (!detectedCurrency) {
-          console.log('No currency from geolocation, trying browser locale...');
-          const locale = navigator.language || navigator.userLanguage;
-          const country = locale.split('-')[1] || 'US';
+
+        // Fallback to a simpler, faster API
+        try {
+          console.log('Trying alternative API...');
+          const response = await fetch('https://api.country.is');
           
-          console.log('Browser locale:', locale, 'Country:', country);
-          
-          const countryToCurrency = {
-            'GB': 'GBP',
-            'ZA': 'ZAR',
-            'CA': 'CAD',
-            'AU': 'AUD',
-            'JP': 'JPY',
-            'IN': 'INR',
-            'BR': 'BRL',
-            'MX': 'MXN',
-            'SG': 'SGD',
-            'HK': 'HKD',
-            'KR': 'KRW',
-            'CN': 'CNY',
-            'CH': 'CHF',
-            'SE': 'SEK',
-            'NO': 'NOK',
-            'DK': 'DKK',
-            'PL': 'PLN',
-            'CZ': 'CZK',
-            'HU': 'HUF',
-            'RU': 'RUB',
-            'TR': 'TRY',
-            'IL': 'ILS',
-            'AE': 'AED',
-            'SA': 'SAR',
-            'QA': 'QAR',
-            'KW': 'KWD',
-            'BH': 'BHD',
-            'OM': 'OMR',
-            'JO': 'JOD',
-            'LB': 'LBP',
-            'EG': 'EGP',
-            'MA': 'MAD',
-            'TN': 'TND',
-            'DZ': 'DZD',
-            'NG': 'NGN',
-            'GH': 'GHS',
-            'KE': 'KES',
-            'UG': 'UGX',
-            'TZ': 'TZS',
-            'ZM': 'ZMW',
-            'BW': 'BWP',
-            'NA': 'NAM',
-            'SZ': 'SZL',
-            'LS': 'LSL',
-            'MU': 'MUR',
-            'SC': 'SCR',
-            'CD': 'CDF',
-            'CM': 'XAF',
-            'SN': 'XOF',
-            'PF': 'XPF',
-          };
-          
-          if (countryToCurrency[country]) {
-            detectedCurrency = countryToCurrency[country];
-            detectedCountry = country;
-            console.log(`Setting currency to ${detectedCurrency} for ${detectedCountry} from browser locale`);
-          } else {
-            console.log('No currency mapping found, using USD');
-            detectedCurrency = 'USD';
-            detectedCountry = 'US';
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Alternative API data:', data);
+            
+            if (data.country) {
+              // Map country to currency
+              const countryToCurrency = {
+                'GB': 'GBP',
+                'ZA': 'ZAR',
+                'CA': 'CAD',
+                'AU': 'AUD',
+                'JP': 'JPY',
+                'IN': 'INR',
+                'BR': 'BRL',
+                'MX': 'MXN',
+                'SG': 'SGD',
+                'HK': 'HKD',
+                'KR': 'KRW',
+                'CN': 'CNY',
+                'CH': 'CHF',
+                'SE': 'SEK',
+                'NO': 'NOK',
+                'DK': 'DKK',
+                'PL': 'PLN',
+                'CZ': 'CZK',
+                'HU': 'HUF',
+                'RU': 'RUB',
+                'TR': 'TRY',
+                'IL': 'ILS',
+                'AE': 'AED',
+                'SA': 'SAR',
+                'QA': 'QAR',
+                'KW': 'KWD',
+                'BH': 'BHD',
+                'OM': 'OMR',
+                'JO': 'JOD',
+                'LB': 'LBP',
+                'EG': 'EGP',
+                'MA': 'MAD',
+                'TN': 'TND',
+                'DZ': 'DZD',
+                'NG': 'NGN',
+                'GH': 'GHS',
+                'KE': 'KES',
+                'UG': 'UGX',
+                'TZ': 'TZS',
+                'ZM': 'ZMW',
+                'BW': 'BWP',
+                'NA': 'NAM',
+                'SZ': 'SZL',
+                'LS': 'LSL',
+                'MU': 'MUR',
+                'SC': 'SCR',
+                'CD': 'CDF',
+                'CM': 'XAF',
+                'SN': 'XOF',
+                'PF': 'XPF',
+              };
+              
+              if (countryToCurrency[data.country]) {
+                console.log(`Setting currency to ${countryToCurrency[data.country]} for ${data.country}`);
+                setUserCurrency(countryToCurrency[data.country]);
+                setUserCountry(data.country);
+                
+                // Cache the result
+                const cacheData = {
+                  currency: countryToCurrency[data.country],
+                  country: data.country
+                };
+                localStorage.setItem('locationCache', JSON.stringify(cacheData));
+                localStorage.setItem('locationCacheTimestamp', now.toString());
+                
+                setIsLoading(false);
+                return;
+              }
+            }
           }
+        } catch (error) {
+          console.log('Alternative API also failed...');
         }
+
+        // Final fallback: browser locale (instant)
+        console.log('Using browser locale as fallback...');
+        const locale = navigator.language || navigator.userLanguage;
+        const country = locale.split('-')[1] || 'US';
         
-        // Set the detected currency and country
-        setUserCurrency(detectedCurrency);
-        setUserCountry(detectedCountry);
-        localStorage.setItem('userCurrency', detectedCurrency);
+        console.log('Browser locale:', locale, 'Country:', country);
         
+        const countryToCurrency = {
+          'GB': 'GBP',
+          'ZA': 'ZAR',
+          'CA': 'CAD',
+          'AU': 'AUD',
+          'JP': 'JPY',
+          'IN': 'INR',
+          'BR': 'BRL',
+          'MX': 'MXN',
+          'SG': 'SGD',
+          'HK': 'HKD',
+          'KR': 'KRW',
+          'CN': 'CNY',
+          'CH': 'CHF',
+          'SE': 'SEK',
+          'NO': 'NOK',
+          'DK': 'DKK',
+          'PL': 'PLN',
+          'CZ': 'CZK',
+          'HU': 'HUF',
+          'RU': 'RUB',
+          'TR': 'TRY',
+          'IL': 'ILS',
+          'AE': 'AED',
+          'SA': 'SAR',
+          'QA': 'QAR',
+          'KW': 'KWD',
+          'BH': 'BHD',
+          'OM': 'OMR',
+          'JO': 'JOD',
+          'LB': 'LBP',
+          'EG': 'EGP',
+          'MA': 'MAD',
+          'TN': 'TND',
+          'DZ': 'DZD',
+          'NG': 'NGN',
+          'GH': 'GHS',
+          'KE': 'KES',
+          'UG': 'UGX',
+          'TZ': 'TZS',
+          'ZM': 'ZMW',
+          'BW': 'BWP',
+          'NA': 'NAM',
+          'SZ': 'SZL',
+          'LS': 'LSL',
+          'MU': 'MUR',
+          'SC': 'SCR',
+          'CD': 'CDF',
+          'CM': 'XAF',
+          'SN': 'XOF',
+          'PF': 'XPF',
+        };
+        
+        if (countryToCurrency[country]) {
+          console.log(`Setting currency to ${countryToCurrency[country]} for ${country} from browser locale`);
+          setUserCurrency(countryToCurrency[country]);
+          setUserCountry(country);
+          
+          // Cache the result
+          const cacheData = {
+            currency: countryToCurrency[country],
+            country: country
+          };
+          localStorage.setItem('locationCache', JSON.stringify(cacheData));
+          localStorage.setItem('locationCacheTimestamp', now.toString());
+          
+          setIsLoading(false);
+        } else {
+          console.log('No currency mapping found, using USD');
+          setUserCurrency('USD');
+          setUserCountry('US');
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Error detecting location:', error);
         console.log('Could not detect location, using USD as default');
         setUserCurrency('USD');
         setUserCountry('US');
-      } finally {
         setIsLoading(false);
       }
     };
 
-    // Always detect location on first load, regardless of localStorage
     detectLocation();
   }, []);
 
@@ -428,6 +466,7 @@ export const useCurrency = () => {
     userCurrency,
     userCountry,
     isLoading,
+    isUpdating,
     convertPrice,
     formatPrice,
     updateCurrency

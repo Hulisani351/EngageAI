@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useCurrency } from './hooks/useCurrency';
 
 function App() {
-  const { formatPrice, isLoading, userCurrency, userCountry, updateCurrency } = useCurrency();
+  const { formatPrice, isLoading, isUpdating, userCurrency, userCountry, updateCurrency } = useCurrency();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
     <div className="page">
@@ -54,38 +54,90 @@ function App() {
               {!isLoading && userCurrency !== 'USD' && (
                 <p className="currency-notice">Prices shown in {userCurrency} for {userCountry}</p>
               )}
+              {!isLoading && userCurrency === 'USD' && (
+                <p className="currency-notice">Prices shown in USD (US Dollar)</p>
+              )}
+              {isUpdating && (
+                <p className="currency-updating">Updating to more accurate location...</p>
+              )}
               {!isLoading && (
                 <p className="currency-debug">Debug: Currency={userCurrency}, Country={userCountry}, Loading={isLoading.toString()}</p>
               )}
-                             {!isLoading && (
-                 <div className="currency-selector">
-                   <label htmlFor="currency-select">Test different currency: </label>
-                   <select 
-                     id="currency-select" 
-                     value={userCurrency} 
-                     onChange={(e) => updateCurrency(e.target.value)}
-                   >
-                     <option value="USD">USD - US Dollar</option>
-                     <option value="GBP">GBP - British Pound</option>
-                     <option value="ZAR">ZAR - South African Rand</option>
-                     <option value="EUR">EUR - Euro</option>
-                     <option value="CAD">CAD - Canadian Dollar</option>
-                     <option value="AUD">AUD - Australian Dollar</option>
-                     <option value="JPY">JPY - Japanese Yen</option>
-                     <option value="INR">INR - Indian Rupee</option>
-                   </select>
-                   <button 
-                     type="button" 
-                     onClick={() => {
-                       localStorage.removeItem('userCurrency');
-                       window.location.reload();
-                     }}
-                     className="currency-reset"
-                   >
-                     Reset to auto-detect
-                   </button>
-                 </div>
-               )}
+                                           {!isLoading && (
+                <div className="currency-selector">
+                  <label htmlFor="currency-select">Test different currency: </label>
+                  <select 
+                    id="currency-select" 
+                    value={userCurrency} 
+                    onChange={(e) => updateCurrency(e.target.value)}
+                  >
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="ZAR">ZAR - South African Rand</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="BRL">BRL - Brazilian Real</option>
+                    <option value="MXN">MXN - Mexican Peso</option>
+                    <option value="SGD">SGD - Singapore Dollar</option>
+                    <option value="HKD">HKD - Hong Kong Dollar</option>
+                    <option value="KRW">KRW - South Korean Won</option>
+                    <option value="CNY">CNY - Chinese Yuan</option>
+                    <option value="CHF">CHF - Swiss Franc</option>
+                    <option value="SEK">SEK - Swedish Krona</option>
+                    <option value="NOK">NOK - Norwegian Krone</option>
+                    <option value="DKK">DKK - Danish Krone</option>
+                    <option value="PLN">PLN - Polish Zloty</option>
+                    <option value="CZK">CZK - Czech Koruna</option>
+                    <option value="HUF">HUF - Hungarian Forint</option>
+                    <option value="RUB">RUB - Russian Ruble</option>
+                    <option value="TRY">TRY - Turkish Lira</option>
+                    <option value="ILS">ILS - Israeli Shekel</option>
+                    <option value="AED">AED - UAE Dirham</option>
+                    <option value="SAR">SAR - Saudi Riyal</option>
+                    <option value="QAR">QAR - Qatari Riyal</option>
+                    <option value="KWD">KWD - Kuwaiti Dinar</option>
+                    <option value="BHD">BHD - Bahraini Dinar</option>
+                    <option value="OMR">OMR - Omani Rial</option>
+                    <option value="JOD">JOD - Jordanian Dinar</option>
+                    <option value="LBP">LBP - Lebanese Pound</option>
+                    <option value="EGP">EGP - Egyptian Pound</option>
+                    <option value="MAD">MAD - Moroccan Dirham</option>
+                    <option value="TND">TND - Tunisian Dinar</option>
+                    <option value="DZD">DZD - Algerian Dinar</option>
+                    <option value="NGN">NGN - Nigerian Naira</option>
+                    <option value="GHS">GHS - Ghanaian Cedi</option>
+                    <option value="KES">KES - Kenyan Shilling</option>
+                    <option value="UGX">UGX - Ugandan Shilling</option>
+                    <option value="TZS">TZS - Tanzanian Shilling</option>
+                    <option value="ZMW">ZMW - Zambian Kwacha</option>
+                    <option value="BWP">BWP - Botswana Pula</option>
+                    <option value="NAM">NAM - Namibian Dollar</option>
+                    <option value="SZL">SZL - Swazi Lilangeni</option>
+                    <option value="LSL">LSL - Lesotho Loti</option>
+                    <option value="MUR">MUR - Mauritian Rupee</option>
+                    <option value="SCR">SCR - Seychellois Rupee</option>
+                    <option value="CDF">CDF - Congolese Franc</option>
+                    <option value="XAF">XAF - Central African CFA Franc</option>
+                    <option value="XOF">XOF - West African CFA Franc</option>
+                    <option value="XPF">XPF - CFP Franc</option>
+                  </select>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      localStorage.removeItem('userCurrency');
+                      localStorage.removeItem('locationCache');
+                      localStorage.removeItem('locationCacheTimestamp');
+                      window.location.reload();
+                    }}
+                    className="currency-reset"
+                  >
+                    Reset to auto-detect
+                  </button>
+                </div>
+              )}
             </div>
             <div className="hero-card" role="img" aria-label="Demo of automated replies">
               <div className="phone">
