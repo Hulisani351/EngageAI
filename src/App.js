@@ -55,24 +55,37 @@ function App() {
                 <p className="currency-notice">Prices shown in {userCurrency} for {userCountry}</p>
               )}
               {!isLoading && (
-                <div className="currency-selector">
-                  <label htmlFor="currency-select">Test different currency: </label>
-                  <select 
-                    id="currency-select" 
-                    value={userCurrency} 
-                    onChange={(e) => updateCurrency(e.target.value)}
-                  >
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="GBP">GBP - British Pound</option>
-                    <option value="ZAR">ZAR - South African Rand</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="CAD">CAD - Canadian Dollar</option>
-                    <option value="AUD">AUD - Australian Dollar</option>
-                    <option value="JPY">JPY - Japanese Yen</option>
-                    <option value="INR">INR - Indian Rupee</option>
-                  </select>
-                </div>
+                <p className="currency-debug">Debug: Currency={userCurrency}, Country={userCountry}, Loading={isLoading.toString()}</p>
               )}
+                             {!isLoading && (
+                 <div className="currency-selector">
+                   <label htmlFor="currency-select">Test different currency: </label>
+                   <select 
+                     id="currency-select" 
+                     value={userCurrency} 
+                     onChange={(e) => updateCurrency(e.target.value)}
+                   >
+                     <option value="USD">USD - US Dollar</option>
+                     <option value="GBP">GBP - British Pound</option>
+                     <option value="ZAR">ZAR - South African Rand</option>
+                     <option value="EUR">EUR - Euro</option>
+                     <option value="CAD">CAD - Canadian Dollar</option>
+                     <option value="AUD">AUD - Australian Dollar</option>
+                     <option value="JPY">JPY - Japanese Yen</option>
+                     <option value="INR">INR - Indian Rupee</option>
+                   </select>
+                   <button 
+                     type="button" 
+                     onClick={() => {
+                       localStorage.removeItem('userCurrency');
+                       window.location.reload();
+                     }}
+                     className="currency-reset"
+                   >
+                     Reset to auto-detect
+                   </button>
+                 </div>
+               )}
             </div>
             <div className="hero-card" role="img" aria-label="Demo of automated replies">
               <div className="phone">
