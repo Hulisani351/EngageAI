@@ -1,7 +1,10 @@
 import './App.css';
 import { useState } from 'react';
+import { useCurrency } from './hooks/useCurrency';
 
 function App() {
+  const { formatPrice, isLoading, userCurrency, userCountry, updateCurrency } = useCurrency();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
     <div className="page">
       <header className="site-header">
@@ -10,12 +13,21 @@ function App() {
             <img src="/EngageLogo.jpg" alt="EngageAI Logo" className="brand-logo" />
             <span>EngageAI</span>
           </div>
-          <nav className="nav-links">
-            <a href="#benefits">Benefits</a>
-            <a href="#how">How it works</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#beta" className="badge-link">Beta</a>
-            <a href="#contact" className="btn btn-secondary">Free setup</a>
+          <button 
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            <span className={mobileMenuOpen ? 'open' : ''}></span>
+            <span className={mobileMenuOpen ? 'open' : ''}></span>
+            <span className={mobileMenuOpen ? 'open' : ''}></span>
+          </button>
+          <nav className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <a href="#benefits" onClick={() => setMobileMenuOpen(false)}>Benefits</a>
+            <a href="#how" onClick={() => setMobileMenuOpen(false)}>How it works</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+            <a href="#beta" className="badge-link" onClick={() => setMobileMenuOpen(false)}>Beta</a>
+            <a href="#contact" className="btn btn-secondary" onClick={() => setMobileMenuOpen(false)}>Free setup</a>
           </nav>
         </div>
       </header>
@@ -36,6 +48,31 @@ function App() {
                 <a href="#how" className="btn btn-link">See how it works</a>
               </div>
               <p className="risk-reversal">No code required. Cancel anytime.</p>
+              {isLoading && (
+                <p className="currency-notice">Detecting your location...</p>
+              )}
+              {!isLoading && userCurrency !== 'USD' && (
+                <p className="currency-notice">Prices shown in {userCurrency} for {userCountry}</p>
+              )}
+              {!isLoading && (
+                <div className="currency-selector">
+                  <label htmlFor="currency-select">Test different currency: </label>
+                  <select 
+                    id="currency-select" 
+                    value={userCurrency} 
+                    onChange={(e) => updateCurrency(e.target.value)}
+                  >
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="ZAR">ZAR - South African Rand</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                  </select>
+                </div>
+              )}
             </div>
             <div className="hero-card" role="img" aria-label="Demo of automated replies">
               <div className="phone">
@@ -44,7 +81,7 @@ function App() {
                   <div className="bubble left">Hi! How can I book?</div>
                   <div className="bubble right">We’ve got you! Tap ‘Book now’ to pick a time.</div>
                   <div className="bubble left">What’s the price?</div>
-                  <div className="bubble right">Starter from $79/mo. Want details by email?</div>
+                  <div className="bubble right">Starter from {isLoading ? '$79' : formatPrice(79)}/mo. Want details by email?</div>
                   <div className="bubble left">Yes – jane@demo.com</div>
                   <div className="bubble right success">Done! We sent pricing to jane@demo.com.</div>
                 </div>
@@ -131,7 +168,7 @@ function App() {
 
         <section className="pricing" id="pricing" aria-labelledby="pricing-title">
           <div className="container">
-            <h2 id="pricing-title">Free trial → then $3000 setup + pay only on wins</h2>
+            <h2 id="pricing-title">Free trial → then {isLoading ? '$3000' : formatPrice(3000)} setup + pay only on wins</h2>
             <div className="no-brainer">
               <div className="value">
                 <h3>What you get</h3>
@@ -145,7 +182,7 @@ function App() {
               <div className="offer">
                 <div className="price-box">
                   <div className="trial">Start with a free trial</div>
-                  <div className="setup">Then one‑time setup: <strong>$3000</strong></div>
+                  <div className="setup">Then one‑time setup: <strong>{isLoading ? '$3000' : formatPrice(3000)}</strong></div>
                   <div className="perf">Performance fee: <strong>10% of revenue EngageAI helps close</strong></div>
                 </div>
                 <a href="#contact" className="btn btn-primary">Start your free trial</a>
